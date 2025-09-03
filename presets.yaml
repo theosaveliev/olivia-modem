@@ -1,0 +1,38 @@
+---
+# Preset name : Olivia MFSK settings
+8/250:
+  symbols: 8
+  bandwidth: 250
+  center_frequency: 1500
+  sample_rate: 8000
+  scramble_key: "0xE257E6D0291574EC"
+  vector_length: 64
+16/500:
+  symbols: 16
+  bandwidth: 500
+  center_frequency: 1500
+  sample_rate: 8000
+  scramble_key: "0xE257E6D0291574EC"
+  vector_length: 64
+16/1k:
+  symbols: 16
+  bandwidth: 1000
+  center_frequency: 1500
+  sample_rate: 8000
+  scramble_key: "0xE257E6D0291574EC"
+  vector_length: 64
+32/1k:
+  symbols: 32
+  bandwidth: 1000
+  center_frequency: 1500
+  sample_rate: 8000
+  scramble_key: "0xE257E6D0291574EC"
+  vector_length: 64
+64/2k:
+  symbols: 64
+  bandwidth: 2000
+  center_frequency: 1500
+  sample_rate: 8000
+  scramble_key: "0xE257E6D0291574EC"
+  vector_length: 64
+...

@@ -1,0 +1,52 @@
+[project]
+name = "olivia-modem"
+version = "0.1.0"
+description = "Olivia MFSK modem."
+readme = "README.md"
+authors = [
+    { name = "Federico Santandrea", email = "93090946+sntfrc@users.noreply.github.com" },
+    { name = "Theo Saveliev", email = "89431871+theosaveliev@users.noreply.github.com" }
+]
+
+license = {text = "MIT"}
+requires-python = ">=3.13"
+
+dependencies = [
+    "numpy>=2.3.2",
+    "sounddevice>=0.5.2,<0.6.0",
+]
+
+[project.optional-dependencies]
+cli = [
+    "click>=8.2.1,<9.0.0",
+    "pyyaml>=6.0.2,<7.0.0",
+    "types-pyyaml>=6.0.12.20250822,<7.0.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.17.1",
+    "pre-commit>=4.3.0",
+    "pylint>=3.3.8",
+    "pytest>=8.4.1,<9.0.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.12,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+add-bounds = "major"
+
+[tool.uv.build-backend]
+module-name = ["olivia_modem", "omodem"]
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+line-length = 88
+target-version = ['py313']
+
+[project.scripts]
+omodem = "omodem.main:cli"
