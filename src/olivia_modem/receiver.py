@@ -8,8 +8,8 @@ from numpy import float32
 from numpy.typing import NDArray
 from sounddevice import CallbackFlags
 
-from olivia_modem.base_settings import BaseSettings
-from olivia_modem.symbol_converter import SDSamples, SymbolConverter
+from olivia_modem.fec_codec import FECCodec, SDSamples
+from olivia_modem.mode_parameters import ModeParameters
 from olivia_modem.tone_generator import ToneGenerator
 
 __all__ = ["Receiver"]
@@ -18,21 +18,21 @@ __all__ = ["Receiver"]
 class Receiver:
     def __init__(
         self,
-        settings: BaseSettings,
+        parameters: ModeParameters,
         callback: Callable[[str], None],
         device: int | str,
         confidence: float = 24.0,
     ):
-        self.sample_rate = settings.sample_rate
-        self.vector_length = settings.vector_length
-        self.symbol_len = settings.symbol_len
+        self.sample_rate = parameters.sample_rate
+        self.vector_length = parameters.vector_length
+        self.symbol_len = parameters.symbol_len
 
         self.rx_queue: deque[int] = deque()
         self.rx_finished = threading.Event()
         self.rx_stream = sd.InputStream(**self.get_rx_stream_kwargs(device))
 
-        self.tone = ToneGenerator(settings)
-        self.symbol = SymbolConverter(settings)
+        self.tone = ToneGenerator(parameters)
+        self.fec = FECCodec(parameters)
         self.confidence = confidence
         self.callback = callback
 
@@ -42,7 +42,7 @@ class Receiver:
             return
 
         block = list(self.rx_queue)
-        decoded, errors = self.symbol.symbols_to_str(block[:vlen], self.confidence)
+        decoded, errors = self.fec.symbols_to_str(block[:vlen], self.confidence)
         if errors == 0:
             decoded = decoded.replace("\x00", "")
             self.callback(decoded)
@@ -53,7 +53,7 @@ class Receiver:
 
     def identify_symbol(self, sample: SDSamples) -> int:
         base_freq = self.tone.get_freq(0)
-        return self.symbol.identify_symbol(sample, base_freq)
+        return self.fec.identify_symbol(sample, base_freq)
 
     def get_rx_stream_kwargs(self, device: int | str) -> dict[str, Any]:
         return {

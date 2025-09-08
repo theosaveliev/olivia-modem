@@ -6,12 +6,12 @@ from numpy import float64
 
 from olivia_modem.tone_generator import ToneGenerator
 
-from .test_symbol_converter import settings  # noqa: F401
+from .test_symbol_converter import parameters  # noqa: F401
 
 
 @pytest.fixture
-def tone(settings):
-    return ToneGenerator(settings)
+def tone(parameters):
+    return ToneGenerator(parameters)
 
 
 @pytest.fixture

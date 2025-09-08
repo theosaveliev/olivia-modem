@@ -56,7 +56,7 @@ def tx_cmd(
 ) -> None:
     """Transmit a message."""
     presets, _ = read_preset_file(preset_file)
-    settings = presets[preset]
+    params = presets[preset]
 
     with click.open_file(message_file) as fd:
         message = fd.read()
@@ -64,14 +64,14 @@ def tx_cmd(
     if not message.isascii():
         raise ValueError("Non-ASCII characters in the message")
 
-    trans = Transmitter(settings=settings, device=device, attenuation=attenuation)
+    trans = Transmitter(parameters=params, device=device, attenuation=attenuation)
     trans.add_opening()
     if pad:
-        trans.add_message("\n" * settings.chars_per_block)
+        trans.add_message("\n" * params.chars_per_block)
 
     trans.add_message(message)
     if pad:
-        trans.add_message("\n" * settings.chars_per_block)
+        trans.add_message("\n" * params.chars_per_block)
 
     trans.add_closing()
     trans.tx_start()
@@ -85,10 +85,10 @@ def tx_cmd(
 def rx_cmd(preset: str, device: int, confidence: float, preset_file: Path) -> None:
     """Receive a message."""
     presets, _ = read_preset_file(preset_file)
-    settings = presets[preset]
+    params = presets[preset]
 
     recv = Receiver(
-        settings=settings, device=device, confidence=confidence, callback=inline_echo
+        parameters=params, callback=inline_echo, device=device, confidence=confidence
     )
 
     recv.rx_start()

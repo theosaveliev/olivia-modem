@@ -2,10 +2,10 @@ import numpy as np
 from numpy import fft, float32, int8
 from numpy.typing import NDArray
 
-from olivia_modem.base_settings import BaseSettings
 from olivia_modem.functions import bits_to_int
+from olivia_modem.mode_parameters import ModeParameters
 
-__all__ = ["SymbolConverter", "Vector", "SDSamples"]
+__all__ = ["FECCodec", "Vector", "SDSamples"]
 
 # A list of [-1,1] values of vector_length
 type Vector = NDArray[int8]
@@ -14,15 +14,15 @@ type Vector = NDArray[int8]
 type SDSamples = NDArray[float32]
 
 
-class SymbolConverter:
-    def __init__(self, settings: BaseSettings):
-        self.symbols = settings.symbols
-        self.sample_rate = settings.sample_rate
-        self.scramble_key = np.flip(np.array(settings.scramble_key_bits, dtype=int8))
-        self.vector_length = settings.vector_length
-        self.symbol_spacing = settings.symbol_spacing
-        self.symbol_len = settings.symbol_len
-        self.chars_per_block = settings.chars_per_block
+class FECCodec:
+    def __init__(self, parameters: ModeParameters):
+        self.symbols = parameters.symbols
+        self.sample_rate = parameters.sample_rate
+        self.scramble_key = np.flip(np.array(parameters.scramble_key_bits, dtype=int8))
+        self.vector_length = parameters.vector_length
+        self.symbol_spacing = parameters.symbol_spacing
+        self.symbol_len = parameters.symbol_len
+        self.chars_per_block = parameters.chars_per_block
 
     def char_to_vector(self, char: str) -> Vector:
         vlen = self.vector_length

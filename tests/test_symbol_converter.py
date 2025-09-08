@@ -3,14 +3,14 @@ import numpy as np
 import pytest
 from numpy import int8
 
-from olivia_modem.base_settings import BaseSettings
-from olivia_modem.symbol_converter import SymbolConverter
+from olivia_modem.fec_codec import FECCodec
+from olivia_modem.mode_parameters import ModeParameters
 
 
 @pytest.fixture
-def settings():
-    """Modulation settings."""
-    return BaseSettings(
+def parameters():
+    """Modulation parameters."""
+    return ModeParameters(
         symbols=64,
         bandwidth=2000,
         center_frequency=1500,
@@ -21,14 +21,14 @@ def settings():
 
 
 @pytest.fixture
-def symbol(settings):
-    return SymbolConverter(settings=settings)
+def fec(parameters):
+    return FECCodec(parameters)
 
 
 @pytest.fixture
-def vector(settings):
+def vector(parameters):
     """A vector corresponding to the letter A."""
-    result = np.zeros(settings.vector_length, dtype=int8)
+    result = np.zeros(parameters.vector_length, dtype=int8)
     result[1] = -1
     return result
 
@@ -73,39 +73,39 @@ def symbol_block_ndarray(symbol_block):
     return np.asarray(symbol_block, dtype=int8)
 
 
-def test_char_to_vector(symbol, vector):
-    assert np.array_equal(symbol.char_to_vector("A"), vector)
+def test_char_to_vector(fec, vector):
+    assert np.array_equal(fec.char_to_vector("A"), vector)
 
 
-def test_vector_to_char(symbol, vector):
-    assert symbol.vector_to_char(vector, confidence=1.0) == "A"
+def test_vector_to_char(fec, vector):
+    assert fec.vector_to_char(vector, confidence=1.0) == "A"
 
 
-def test_ifwht(symbol, vector, vector_ifwht):
-    assert np.array_equal(symbol.ifwht(vector), vector_ifwht)
+def test_ifwht(fec, vector, vector_ifwht):
+    assert np.array_equal(fec.ifwht(vector), vector_ifwht)
 
 
-def test_fwht(symbol, vector, vector_fwht):
-    assert np.array_equal(symbol.fwht(vector), vector_fwht)
+def test_fwht(fec, vector, vector_fwht):
+    assert np.array_equal(fec.fwht(vector), vector_fwht)
 
 
-def test_scramble(symbol, vector, vector_scrambled):
-    assert np.array_equal(symbol.scramble(vector, 1), vector_scrambled)
+def test_scramble(fec, vector, vector_scrambled):
+    assert np.array_equal(fec.scramble(vector, 1), vector_scrambled)
 
 
-def test_gray_encode(symbol):
-    assert symbol.gray_encode(100) == 86
+def test_gray_encode(fec):
+    assert fec.gray_encode(100) == 86
 
 
-def test_gray_decode(symbol):
-    assert symbol.gray_decode(100) == 71
+def test_gray_decode(fec):
+    assert fec.gray_decode(100) == 71
 
 
-def test_str_to_symbols(symbol, symbol_block_ndarray):
-    assert np.array_equal(symbol.str_to_symbols("AAAAAA"), symbol_block_ndarray)
+def test_str_to_symbols(fec, symbol_block_ndarray):
+    assert np.array_equal(fec.str_to_symbols("AAAAAA"), symbol_block_ndarray)
 
 
-def test_symbols_to_str(symbol, symbol_block):
-    decoded, errors = symbol.symbols_to_str(symbol_block, 1.0)
+def test_symbols_to_str(fec, symbol_block):
+    decoded, errors = fec.symbols_to_str(symbol_block, 1.0)
     assert decoded == "AAAAAA"
     assert errors == 0

@@ -4,20 +4,20 @@ from typing import Any
 import click
 import yaml
 
-from olivia_modem import BaseSettings
+from olivia_modem import ModeParameters
 
 __all__ = ["read_preset_file", "inline_echo"]
 
 
-def read_preset_file(src: Path) -> tuple[dict[str, BaseSettings], dict[str, Any]]:
+def read_preset_file(src: Path) -> tuple[dict[str, ModeParameters], dict[str, Any]]:
     with click.open_file(src) as fd:
         original = yaml.safe_load(fd.read())
 
     parsed = {}
-    for name, settings in original.items():
-        args = settings.copy()
+    for name, params in original.items():
+        args = params.copy()
         args["scramble_key"] = int(args["scramble_key"], base=16)
-        parsed[name] = BaseSettings(**args)
+        parsed[name] = ModeParameters(**args)
 
     return parsed, original
 

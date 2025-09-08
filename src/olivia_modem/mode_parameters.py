@@ -3,11 +3,11 @@ from dataclasses import dataclass
 
 from olivia_modem.functions import is_power_of_2
 
-__all__ = ["BaseSettings"]
+__all__ = ["ModeParameters"]
 
 
 @dataclass()
-class BaseSettings:
+class ModeParameters:
     symbols: int = 32
     bandwidth: int = 1000
     center_frequency: int = 1500

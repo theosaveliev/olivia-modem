@@ -1,15 +1,15 @@
-from .base_settings import BaseSettings
+from .fec_codec import FECCodec, SDSamples, Vector
 from .functions import bits_to_int, is_power_of_2
+from .mode_parameters import ModeParameters
 from .receiver import Receiver
-from .symbol_converter import SDSamples, SymbolConverter, Vector
 from .tone_generator import ToneGenerator, ToneSamples
 from .transmitter import Transmitter
 
 __all__ = [
-    "BaseSettings",
+    "ModeParameters",
     "Transmitter",
     "Receiver",
-    "SymbolConverter",
+    "FECCodec",
     "Vector",
     "SDSamples",
     "ToneGenerator",

@@ -2,7 +2,7 @@ import numpy as np
 from numpy import float64, pi
 from numpy.typing import NDArray
 
-from olivia_modem.base_settings import BaseSettings
+from olivia_modem.mode_parameters import ModeParameters
 
 __all__ = ["ToneGenerator", "ToneSamples"]
 
@@ -11,12 +11,12 @@ type ToneSamples = NDArray[float64]
 
 
 class ToneGenerator:
-    def __init__(self, settings: BaseSettings):
-        self.symbols = settings.symbols
-        self.bandwidth = settings.bandwidth
-        self.center_frequency = settings.center_frequency
-        self.sample_rate = settings.sample_rate
-        self.symbol_spacing = settings.symbol_spacing
+    def __init__(self, parameters: ModeParameters):
+        self.symbols = parameters.symbols
+        self.bandwidth = parameters.bandwidth
+        self.center_frequency = parameters.center_frequency
+        self.sample_rate = parameters.sample_rate
+        self.symbol_spacing = parameters.symbol_spacing
 
     def get_freq(self, tone_number: int) -> float:
         return (

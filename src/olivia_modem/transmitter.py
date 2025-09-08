@@ -9,8 +9,8 @@ from numpy import float32, float64
 from numpy.typing import NDArray
 from sounddevice import CallbackFlags
 
-from olivia_modem.base_settings import BaseSettings
-from olivia_modem.symbol_converter import SDSamples, SymbolConverter
+from olivia_modem.fec_codec import FECCodec, SDSamples
+from olivia_modem.mode_parameters import ModeParameters
 from olivia_modem.tone_generator import ToneGenerator, ToneSamples
 
 __all__ = ["Transmitter"]
@@ -18,20 +18,20 @@ __all__ = ["Transmitter"]
 
 class Transmitter:
     def __init__(
-        self, settings: BaseSettings, device: int | str, attenuation: float = 30.0
+        self, parameters: ModeParameters, device: int | str, attenuation: float = 30.0
     ):
-        self.sample_rate = settings.sample_rate
-        self.vector_length = settings.vector_length
-        self.symbol_len = settings.symbol_len
-        self.chars_per_block = settings.chars_per_block
+        self.sample_rate = parameters.sample_rate
+        self.vector_length = parameters.vector_length
+        self.symbol_len = parameters.symbol_len
+        self.chars_per_block = parameters.chars_per_block
 
         self.tx_queue: deque[SDSamples] = deque()
         self.tx_block_len = self.symbol_len * self.vector_length
         self.tx_finished = threading.Event()
         self.tx_stream = sd.OutputStream(**self.get_tx_stream_kwargs(device))
 
-        self.tone = ToneGenerator(settings)
-        self.symbol = SymbolConverter(settings)
+        self.tone = ToneGenerator(parameters)
+        self.fec = FECCodec(parameters)
         self.last_symbol: ToneSamples = np.zeros(self.symbol_len, dtype=float64)
         self.attenuation = float64(attenuation)
 
@@ -45,7 +45,7 @@ class Transmitter:
         # Overlap last symbol
         buff[0:slen] = tail
 
-        symbols = self.symbol.str_to_symbols(chars)
+        symbols = self.fec.str_to_symbols(chars)
         for i, tone_number in enumerate(symbols):
             tone = self.tone.generate_tone(tone_number)
             start = slen * i
