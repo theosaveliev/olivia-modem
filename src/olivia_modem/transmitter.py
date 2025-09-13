@@ -9,8 +9,9 @@ from numpy import float32, float64
 from numpy.typing import NDArray
 from sounddevice import CallbackFlags
 
-from olivia_modem.fec_codec import FECCodec, SDSamples
+from olivia_modem.fec_codec import FECCodec
 from olivia_modem.mode_parameters import ModeParameters
+from olivia_modem.shared_types import SDSamples
 from olivia_modem.tone_generator import ToneGenerator, ToneSamples
 
 __all__ = ["Transmitter"]

@@ -3,13 +3,15 @@ import threading
 from collections import deque
 from typing import Any, Callable
 
+import numpy as np
 import sounddevice as sd
-from numpy import float32
+from numpy import fft, float32
 from numpy.typing import NDArray
 from sounddevice import CallbackFlags
 
-from olivia_modem.fec_codec import FECCodec, SDSamples
+from olivia_modem.fec_codec import FECCodec
 from olivia_modem.mode_parameters import ModeParameters
+from olivia_modem.shared_types import SDSamples
 from olivia_modem.tone_generator import ToneGenerator
 
 __all__ = ["Receiver"]
@@ -23,8 +25,10 @@ class Receiver:
         device: int | str,
         confidence: float = 24.0,
     ):
+        self.symbols = parameters.symbols
         self.sample_rate = parameters.sample_rate
         self.vector_length = parameters.vector_length
+        self.symbol_spacing = parameters.symbol_spacing
         self.symbol_len = parameters.symbol_len
 
         self.rx_queue: deque[int] = deque()
@@ -51,9 +55,17 @@ class Receiver:
         else:
             self.rx_queue.popleft()
 
-    def identify_symbol(self, sample: SDSamples) -> int:
+    def identify_symbol(self, symbol: SDSamples) -> int:
+        """Transform the mic samples to the tone number."""
         base_freq = self.tone.get_freq(0)
-        return self.fec.identify_symbol(sample, base_freq)
+        spectrum = np.abs(fft.fft(symbol))
+        measures = np.zeros(self.symbols)
+        ix = base_freq + self.symbol_spacing
+        for i in range(self.symbols):
+            measures[i] = spectrum[int(ix * self.symbol_len / self.sample_rate)]
+            ix += self.symbol_spacing
+
+        return int(np.argmax(measures))
 
     def get_rx_stream_kwargs(self, device: int | str) -> dict[str, Any]:
         return {

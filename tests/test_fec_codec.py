@@ -4,29 +4,17 @@ import pytest
 from numpy import int8
 
 from olivia_modem.fec_codec import FECCodec
-from olivia_modem.mode_parameters import ModeParameters
+
+from .fixtures import parameters  # noqa: F401
 
 
 @pytest.fixture
-def parameters():
-    """Modulation parameters."""
-    return ModeParameters(
-        symbols=64,
-        bandwidth=2000,
-        center_frequency=1500,
-        sample_rate=8000,
-        scramble_key=0xE257E6D0291574EC,
-        vector_length=64,
-    )
-
-
-@pytest.fixture
-def fec(parameters):
+def fec(parameters):  # noqa: F811
     return FECCodec(parameters)
 
 
 @pytest.fixture
-def vector(parameters):
+def vector(parameters):  # noqa: F811
     """A vector corresponding to the letter A."""
     result = np.zeros(parameters.vector_length, dtype=int8)
     result[1] = -1
