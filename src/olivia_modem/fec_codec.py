@@ -13,10 +13,10 @@ type Vector = NDArray[int8]
 
 class FECCodec:
     def __init__(self, parameters: ModeParameters):
-        self.scramble_key = np.flip(np.array(parameters.scramble_key_bits, dtype=int8))
         self.vector_length = parameters.vector_length
         self.symbol_len = parameters.symbol_len
         self.chars_per_block = parameters.chars_per_block
+        self.scramble_key_bits = parameters.scramble_key_bits
 
     def char_to_vector(self, char: str) -> Vector:
         vlen = self.vector_length
@@ -79,10 +79,15 @@ class FECCodec:
 
     def scramble(self, char: Vector, rotate: int) -> Vector:
         """Scrambler encoding/decoding."""
-        # XOR with the key (multiply by -1 or 1)
-        rotate = (-13 * rotate) % len(self.scramble_key)
-        mask = 1 - 2 * np.roll(self.scramble_key, rotate)
-        return char * mask
+        result = char.copy()
+        code_wrap = len(self.scramble_key_bits) - 1
+        code_bit = (13 * rotate) & code_wrap
+        for time_bit in range(len(char)):
+            if self.scramble_key_bits[code_bit] == 1:
+                result[time_bit] = -result[time_bit]
+
+            code_bit = (code_bit + 1) & code_wrap
+        return result
 
     @staticmethod
     def gray_encode(n: int) -> int:
