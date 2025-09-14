@@ -6,7 +6,7 @@ from numpy import float64
 
 from olivia_modem.tone_generator import ToneGenerator
 
-from .fixtures import parameters  # noqa: F401
+from .fixtures import parameters  # noqa: F401 pylint: disable=unused-import
 
 
 @pytest.fixture

@@ -2,7 +2,6 @@ import numpy as np
 from numpy import int8
 from numpy.typing import NDArray
 
-from olivia_modem.functions import bits_to_int
 from olivia_modem.mode_parameters import ModeParameters
 
 __all__ = ["FECCodec", "Vector"]
@@ -77,11 +76,11 @@ class FECCodec:
             step //= 2
         return char
 
-    def scramble(self, char: Vector, rotate: int) -> Vector:
+    def scramble(self, char: Vector, code_offset: int) -> Vector:
         """Scrambler encoding/decoding."""
         result = char.copy()
         code_wrap = len(self.scramble_key_bits) - 1
-        code_bit = (13 * rotate) & code_wrap
+        code_bit = (13 * code_offset) & code_wrap
         for time_bit in range(len(char)):
             if self.scramble_key_bits[code_bit] == 1:
                 result[time_bit] = -result[time_bit]
@@ -106,53 +105,49 @@ class FECCodec:
 
     def str_to_symbols(self, chars: str) -> list[int]:
         """Transform a string into a list of tone numbers."""
-        char_vectors = []
-        for i, char in enumerate(chars):
-            vector = self.char_to_vector(char)
-            vector = self.ifwht(vector)
-            vector = self.scramble(vector, i)
-            char_vectors.append(vector)
-
-        # Interleaving
-        blen = len(char_vectors)
+        blen = len(chars)
         vlen = self.vector_length
-        symbols = []
-        for j in range(vlen):
-            row = np.zeros(blen, dtype=int8)
-            for i in range(blen):
-                q = (100 * blen + i - j) % blen
-                if char_vectors[q][j] < 0:
-                    row[i] = 1
-            symbols.append(row)
+        output_block = [0] * vlen
 
-        result = []
-        for row in symbols:
-            snum = bits_to_int(np.flip(row))
-            snum = self.gray_encode(snum)
-            result.append(snum)
+        for freq_bit in range(blen):
+            vector = self.char_to_vector(chars[freq_bit])
+            vector = self.ifwht(vector)
+            vector = self.scramble(vector, freq_bit)
 
-        return result
+            # Interleaving
+            rotate = 0
+            for time_bit in range(vlen):
+                if vector[time_bit] < 0:
+                    bit = freq_bit + rotate
+                    if bit >= blen:
+                        bit -= blen
+
+                    mask = 1 << bit
+                    output_block[time_bit] |= mask
+
+                rotate += 1
+                if rotate >= blen:
+                    rotate -= blen
+
+        return [self.gray_encode(symbol) for symbol in output_block]
 
     def symbols_to_str(self, block: list[int], confidence: float) -> tuple[str, int]:
         """Transform the tone numbers to the str."""
         decoded_symbols = [self.gray_decode(symbol) for symbol in block]
-
-        # Deinterleaving
         blen = self.chars_per_block
         vlen = len(decoded_symbols)
-        vectors = []
-        for i in range(blen):
-            row = np.zeros(vlen, dtype=int8)
-            for j in range(vlen):
-                # Extract bit at position ((i+j) % blen)
-                q = (decoded_symbols[j] >> ((i + j) % blen)) & 1
-                row[j] = -1 if q == 1 else 1
-            vectors.append(row)
-
         decoding_errors = 0
         result = []
-        for i, vector in enumerate(vectors):
-            vector = self.scramble(vector, i)
+        for freq_bit in range(blen):
+            vector = np.zeros(vlen, dtype=int8)
+            # Deinterleaving
+            for time_bit in range(vlen):
+                # Extract a bit at position ((freq_bit + time_bit) % blen)
+                bit_pos = (freq_bit + time_bit) % blen
+                bit_value = (decoded_symbols[time_bit] >> bit_pos) & 1
+                vector[time_bit] = -1 if bit_value == 1 else 1
+
+            vector = self.scramble(vector, freq_bit)
             vector = self.fwht(vector)
             char = self.vector_to_char(vector, confidence)
             if char is None:
