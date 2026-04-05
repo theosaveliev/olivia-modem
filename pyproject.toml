@@ -1,6 +1,6 @@
 [project]
 name = "olivia-modem"
-version = "0.1.4"
+version = "0.1.5"
 description = "Olivia MFSK modem."
 readme = "README.md"
 authors = [
